@@ -16,8 +16,8 @@ Generating thumbnails
 
 You want to serve images located in ``/foo``. Use the ``get_image_response`` helper::
 
-    >>> def get_image_response(document_root='/foo', cache_directory='/tmp/cache',
-    ...                        size=(500, 500), path='/image.png', accel_header=None)
+    >>> get_image_response(document_root='/foo', cache_directory='/tmp/cache',
+    ...                    size=(500, 500), path='/image.png', accel_header=None)
 
 This will return a ``webob.Response`` containing a resized version of
 ``/foo/image.png``. If size is None then the file is returned without resizing.
@@ -82,6 +82,6 @@ If you do not provide some sizes then those are used::
 You can now retrieve your images with::
 
     >>> print request.route_url('thumbs', size='small',
-    ...                         path=['tests', 'image.png')
+    ...                         path=['tests', 'image.png'])
     'http://localhost/thumbs/small/tests/image.png'
 
