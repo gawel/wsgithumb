@@ -4,11 +4,7 @@ from hashlib import md5
 import stat
 from wsgithumb.utils import get_file_response
 from wsgithumb.utils import HTTPNotFound
-
-try:
-    import PIL.Image as Image
-except ImportError:
-    import Image  # NOQA
+from wsgithumb.utils import resize
 
 DEFAULT_SIZES = {
     'icon': (16, 16),
@@ -19,14 +15,6 @@ DEFAULT_SIZES = {
     'xlarge': (800, 800),
     'original': None,
     }
-
-
-def resize(src, dst, size, mode='r'):
-    """resize an image to size"""
-    image = Image.open(src, mode)
-    image.thumbnail(size, Image.ANTIALIAS)
-    image.save(dst)
-    return dst
 
 
 def get_image_response(document_root=None, cache_directory=None,
@@ -110,18 +98,18 @@ def includeme(config):
     config.add_directive('add_thumb_view', add_thumb_view)
 
 
-def make_thumb_app(global_conf, **settings):
-    """paste.deploy factory"""
-    document_root = settings['document_root']
+def make_thumb_app(global_conf, document_root=None,
+                   cache_directory=None,
+                   accel_header=None,
+                   sizes=DEFAULT_SIZES,
+                   **settings):
+    """thumb application factory"""
     document_root = os.path.abspath(document_root)
 
-    cache_directory = settings['cache_directory']
     cache_directory = os.path.abspath(cache_directory)
 
     if not os.path.isdir(cache_directory):
         os.makedirs(cache_directory)
-
-    accel_header = settings.get('accel_header', None)
 
     def application(environ, start_response):
         path_info = environ['PATH_INFO'].strip('/')
@@ -131,7 +119,7 @@ def make_thumb_app(global_conf, **settings):
             return HTTPNotFound()(environ, start_response)
         if size not in DEFAULT_SIZES:
             return HTTPNotFound()(environ, start_response)
-        size = DEFAULT_SIZES[size]
+        size = sizes[size]
         return get_image_response(
             document_root=document_root,
             cache_directory=cache_directory,
@@ -141,12 +129,11 @@ def make_thumb_app(global_conf, **settings):
     return application
 
 
-def make_file_app(global_conf, **settings):
-    """paste.deploy factory"""
-    document_root = settings['document_root']
+def make_file_app(global_conf, document_root=None,
+                   accel_header=None,
+                   **settings):
+    """file application factory"""
     document_root = os.path.abspath(document_root)
-
-    accel_header = settings.get('accel_header', None)
 
     def application(environ, start_response):
         path_info = environ['PATH_INFO'].strip('/')

@@ -13,6 +13,19 @@ try:
 except ImportError:
     from webob.exc import HTTPNotFound  # NOQA
 
+try:
+    import PIL.Image as Image
+except ImportError:
+    import Image  # NOQA
+
+
+def resize(src, dst, size, mode='r'):
+    """resize an image to size"""
+    image = Image.open(src, mode)
+    image.thumbnail(size, Image.ANTIALIAS)
+    image.save(dst)
+    return dst
+
 
 class FileIterable(object):
 
@@ -73,6 +86,7 @@ def get_mimetype(filename):
 
 
 def get_file_response(filename, document_root=None, accel_header=None):
+    """helper the get a file response"""
     if not os.path.isfile(filename):
         return HTTPNotFound()
     resp = Response(content_type=get_mimetype(filename),
