@@ -17,11 +17,11 @@ class TestAccel(unittest.TestCase):
         filename = os.path.abspath(__file__).replace('.pyc', '.py')
         document_root = filename.split('tests')[0]
         resp = get_file_response(filename,
-                                 accel_header='x-Accel-Redirect:/accel/',
+                                 accel_header='x-Accel-Redirect',
                                  document_root=document_root)
         self.assertIn('X-Accel-Redirect',  resp.headers)
         self.assertEqual(resp.headers['X-Accel-Redirect'],
-                        '/accel/tests/tests.py')
+                        '/tests/tests.py')
 
     def test_apache(self):
         filename = os.path.abspath(__file__)
@@ -124,17 +124,25 @@ class TestImageAccel(unittest.TestCase):
 
     def setUp(self):
         self.wd = wd = tempfile.mkdtemp()
+        self.dirname = os.path.basename(wd)
         self.addCleanup(shutil.rmtree, wd)
         filename = os.path.abspath(__file__)
         document_root = filename.split('tests')[0]
         self.app = TestApp(make_thumb_app({},
                            cache_directory=wd,
                            document_root=document_root,
-                           accel_header='x-accel-redirect:/cache'))
+                           accel_header='x-accel-redirect'))
 
     def test_thumb(self):
         resp = self.app.get('/small/tests/image.jpg')
         self.assertEqual(resp.status_int, 200)
         self.assertIn('X-Accel-Redirect',  resp.headers)
         self.assertEqual(resp.headers['X-Accel-Redirect'],
-                        '/cache/d0b/366/791/image.jpg')
+                        '/%s/d0b/366/791/image.jpg' % self.dirname)
+
+    def test_original(self):
+        resp = self.app.get('/original/tests/image.jpg')
+        self.assertEqual(resp.status_int, 200)
+        self.assertIn('X-Accel-Redirect',  resp.headers)
+        self.assertEqual(resp.headers['X-Accel-Redirect'],
+                        '/wsgithumb/tests/image.jpg')

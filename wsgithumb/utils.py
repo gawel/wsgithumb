@@ -96,11 +96,10 @@ def get_file_response(filename, document_root=None, accel_header=None):
     resp.etag = '%s-%s-%s' % (os.path.getmtime(filename),
                               os.path.getsize(filename), hash(filename))
     if accel_header:
-        if accel_header.lower().startswith("x-accel-redirect:"):
+        if accel_header.lower() == "x-accel-redirect":
             # return full path
-            filename = filename[len(document_root):]
-            accel_header, accel_path = accel_header.split(':', 1)
-            filename = '/%s/%s' % (accel_path.strip('/'), filename.strip('/'))
+            filename = filename[len(os.path.dirname(document_root)):]
+            filename = '/%s' % filename.strip('/')
             resp.headers[accel_header.title()] = filename
         elif accel_header.lower() == "x-sendfile":
             # return full path

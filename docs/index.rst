@@ -22,7 +22,7 @@ You want to serve images located in ``document_root``. Use the
     >>> from wsgithumb import get_image_response
     >>> from tests import document_root
     >>> resp = get_image_response(document_root=document_root,
-    ...                           cache_directory='/tmp/cache',
+    ...                           cache_directory='/tmp/www/cache',
     ...                           size=(500, 500), path='tests/image.jpg',
     ...                           accel_header=None)
     >>> print resp
@@ -64,9 +64,31 @@ application.
 
 wsgithumb allow you to use this feature. Just use the accel_header parameter.
 
-For NGinx, set ``accel_header="x-accel-redirect:/path/bound/by/nginx"``
+For NGinx, set ``accel_header="x-accel-redirect"``
 
 For Apache, set ``accel_header="x-sendfile"``
+
+Here is an example with a thumb::
+
+    >>> resp = get_image_response(document_root=document_root,
+    ...                           cache_directory='/tmp/www/cache',
+    ...                           size=(500, 500), path='tests/image.jpg',
+    ...                           accel_header='x-accel-redirect')
+    >>> print resp
+    200 OK
+    Content-Type: image/jpeg
+    Last-Modified: ... GMT
+    ETag: "..."
+    X-Accel-Redirect: /cache/5b6/aaf/3a6/image.jpg
+
+So you just need to add this to your nginx configuration::
+
+    location /cache/ {
+      internal;
+      root   /tmp/www;
+    }
+
+So nginx can serve ``/tmp/www/cache/5b6/aaf/3a6/image.jpg``
 
 WSGI Applications
 =================
@@ -100,7 +122,7 @@ Add this to your ``.ini`` file:
     thumbs.document_root = %(here)s/www/images
     thumbs.cache_directory = %(here)s/www/cache
     # if you want to use the accel_header when in production
-    #thumbs.accel_header = x-accel-redirect:/thumbs/cache
+    #thumbs.accel_header = x-accel-redirect
 
 Add a :func:`~wsgithumb.add_thumb_view` to your ``__init__.py``::
 
@@ -144,6 +166,8 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
+..
+    >>> import shutil
+    >>> shutil.rmtree('/tmp/www')
