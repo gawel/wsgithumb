@@ -13,53 +13,12 @@ Use easy_install or pip::
 
     $ pip install PIL wsgithumb
 
-Generating thumbnails
-----------------------
-
-You want to serve images located in ``document_root``. Use the
-:func:`~wsgithumb.get_image_response` helper::
-
-    >>> from wsgithumb import get_image_response
-    >>> from tests import document_root
-    >>> resp = get_image_response(document_root=document_root,
-    ...                           cache_directory='/tmp/www/cache',
-    ...                           size=(500, 500), path='tests/image.jpg',
-    ...                           accel_header=None)
-    >>> print resp
-    200 OK
-    Content-Type: image/jpeg
-    Last-Modified: ... GMT
-    ETag: "..."
-    Content-Length: 23590
-    ...
-
-This will return a ``webob.Response`` containing a resized version of
-``document_root/tests/image.jpg``. If size is None then the file is returned without resizing.
-
-Serving files
--------------
-
-While it's not it's primary function, **wsgithumb** allow to efficiently serve a
-file with the :func:`~wsgithumb.get_file_response` helper::
-
-    >>> from wsgithumb import get_file_response
-    >>> from tests import filename
-    >>> resp = get_file_response(filename, document_root=document_root,
-    ...                          accel_header=None)
-    >>> print resp
-    200 OK
-    Content-Type: text/x-python; charset=UTF-8
-    Last-Modified: ... GMT
-    ETag: "..."
-    Content-Length: 114
-    ...
-
-Accel headers
---------------
+About X-Sendfile
+-----------------
 
 Moderns web servers like NGinx or Apache implement the ``X-Sendfile`` feature.
 This allow your application to only return the file path in a response header
-the the web server will use this path to serve the file without blocking your
+then the web server will use this path to serve the file without blocking your
 application.
 
 **wsgithumb** allow you to use this feature. Just use the accel_header parameter.
@@ -91,7 +50,7 @@ So you just need to add this to your nginx configuration::
 So nginx can serve ``/tmp/www/cache/5b6/aaf/3a6/image.jpg``
 
 WSGI Applications
-=================
+------------------
 
 **wsgithumb** provide 2 entry points for PasteDeploy:
 
@@ -99,12 +58,35 @@ WSGI Applications
 
     [app:thumbs]
     use = wsgithumb#thumbs
+    document_root = /var/www/images
+    cache_directory = /var/www/thumbs
+    # for production
+    #accel_header = x-accel-redirect
 
     [app:files]
     use = wsgithumb#files
+    document_root = /var/www/files
+    # for production
+    #accel_header = x-accel-redirect
 
 See :func:`~wsgithumb.make_thumb_app` and :func:`~wsgithumb.make_file_app` for
 available options.
+
+You'll need the following NGinx configuration in production mode::
+
+    location /images/ {
+        internal;
+        root /var/www;
+    }
+    location /thumbs/ {
+        internal;
+        root /var/www;
+    }
+    location /files/ {
+        internal;
+        root /var/www;
+    }
+
 
 Using wsgithumb in Pyramid
 --------------------------
