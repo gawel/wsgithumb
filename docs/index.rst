@@ -124,14 +124,23 @@ Add this to your ``.ini`` file:
     # if you want to use the accel_header when in production
     #thumbs.accel_header = x-accel-redirect
 
+..
+    >>> from pyramid import testing
+    >>> config = testing.setUp()
+    >>> config.registry.settings.update({
+    ...   'thumbs.document_root': '/tmp/www/images',
+    ...   'thumbs.cache_directory': '/tmp/www/cache',
+    ... })
+
 Add a :func:`~wsgithumb.add_thumb_view` to your ``__init__.py``::
 
-    sizes = {
-        'thumb': (100, 100),
-        'large': (500, 500),
-        'original': None,
-        }
-    config.add_thumb_view('thumbs', sizes=sizes)
+    >>> sizes = {
+    ...     'thumb': (100, 100),
+    ...     'large': (500, 500),
+    ...     'original': None,
+    ...     }
+    >>> config.include('wsgithumb')
+    >>> config.add_thumb_view('thumbs', sizes=sizes)
 
 If you do not provide some sizes then those are used::
 
@@ -148,7 +157,7 @@ If you do not provide some sizes then those are used::
 You can now retrieve your images with::
 
     >>> print request.route_url('thumbs', size='small',
-    ...                         path=['tests', 'image.png']
+    ...                         path='tests/image.png']
     ...                        ) #doctest: +SKIP
     'http://localhost/thumbs/small/tests/image.png'
 
