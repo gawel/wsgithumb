@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
-from hashlib import sha1
+from hashlib import md5
 import stat
 from wsgithumb.utils import get_file_response
-
-try:
-    from pyramid.httpexceptions import HTTPNotFound
-except ImportError:
-    from webob.exc import HTTPNotFound  # NOQA
+from wsgithumb.utils import HTTPNotFound
 
 try:
     import PIL.Image as Image
@@ -53,8 +49,8 @@ def get_image_response(document_root=None, cache_directory=None,
                                            document_root=document_root)
 
     # generate cached direname
-    h = sha1('%s-%s' % (path, size)).hexdigest()
-    d1, d2, d3 = h[0:3], h[3:6], h[:6]
+    h = md5('%s-%s' % (path, size)).hexdigest()
+    d1, d2, d3 = h[0:3], h[3:6], h[6:9]
 
     cached = os.path.join(cache_directory, d1, d2, d3)
     if not os.path.isdir(cached):
@@ -72,8 +68,9 @@ def get_image_response(document_root=None, cache_directory=None,
     if not os.path.isfile(cached):
         resize(filename, cached, size)
 
-    return get_file_response(cached, accel_header=accel_header,
-                                       document_root=cache_directory)
+    return get_file_response(cached,
+                             document_root=cache_directory,
+                             accel_header=accel_header)
 
 
 def add_thumb_view(config, route_name, sizes=DEFAULT_SIZES,
@@ -113,7 +110,7 @@ def includeme(config):
     config.add_directive('add_thumb_view', add_thumb_view)
 
 
-def make_app(global_conf, **settings):
+def make_thumb_app(global_conf, **settings):
     """paste.deploy factory"""
     document_root = settings['document_root']
     document_root = os.path.abspath(document_root)
@@ -128,12 +125,36 @@ def make_app(global_conf, **settings):
 
     def application(environ, start_response):
         path_info = environ['PATH_INFO'].strip('/')
-        size, path = path_info.split('/', 1)
-        path = '/'.join(path)
+        try:
+            size, path = path_info.split('/', 1)
+        except ValueError:
+            return HTTPNotFound()(environ, start_response)
+        if size not in DEFAULT_SIZES:
+            return HTTPNotFound()(environ, start_response)
+        size = DEFAULT_SIZES[size]
         return get_image_response(
             document_root=document_root,
             cache_directory=cache_directory,
             size=size, path=path, accel_header=accel_header
-        )
+        )(environ, start_response)
+
+    return application
+
+
+def make_file_app(global_conf, **settings):
+    """paste.deploy factory"""
+    document_root = settings['document_root']
+    document_root = os.path.abspath(document_root)
+
+    accel_header = settings.get('accel_header', None)
+
+    def application(environ, start_response):
+        path_info = environ['PATH_INFO'].strip('/')
+        filename = os.path.join(document_root, path_info)
+        return get_file_response(
+            filename=filename,
+            document_root=document_root,
+            accel_header=accel_header
+        )(environ, start_response)
 
     return application

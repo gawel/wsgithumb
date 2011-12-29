@@ -8,6 +8,11 @@ try:
 except ImportError:
     from webob import Response  # NOQA
 
+try:
+    from pyramid.httpexceptions import HTTPNotFound
+except ImportError:
+    from webob.exc import HTTPNotFound  # NOQA
+
 
 class FileIterable(object):
 
@@ -67,7 +72,9 @@ def get_mimetype(filename):
     return type or 'application/octet-stream'
 
 
-def get_file_response(filename, accel_header=None, document_root=None):
+def get_file_response(filename, document_root=None, accel_header=None):
+    if not os.path.isfile(filename):
+        return HTTPNotFound()
     resp = Response(content_type=get_mimetype(filename),
                     conditional_response=True)
     resp.content_length = os.path.getsize(filename)

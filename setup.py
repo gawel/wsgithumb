@@ -31,6 +31,7 @@ setup(name='wsgithumb',
       entry_points="""
       # -*- Entry points: -*-
       [paste.app_factory]
-      main = wsgithumb:make_app
+      main = wsgithumb:make_thumb_app
+      file = wsgithumb:make_file_app
       """,
       )

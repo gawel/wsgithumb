@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from wsgithumb import get_file_response
+from wsgithumb import make_file_app
+from wsgithumb import make_thumb_app
 from pyramid import testing
 from webtest import TestApp
 import unittest2 as unittest
@@ -81,3 +83,58 @@ class TestThumb(unittest.TestCase):
         resp = self.app.get('/route_url?path=tests&path=image.png')
         self.assertEqual(resp.body,
                          'http://localhost/thumbs/small/tests/image.png')
+
+
+class TestFile(unittest.TestCase):
+
+    def setUp(self):
+        filename = os.path.abspath(__file__)
+        document_root = filename.split('tests')[0]
+        self.app = TestApp(make_file_app({}, document_root=document_root))
+
+    def test_file(self):
+        self.app.get('/tests/tests.pic', status=404)
+
+        resp = self.app.get('/tests/tests.py')
+        self.assertEqual(resp.status_int, 200)
+
+
+class TestImage(unittest.TestCase):
+
+    def setUp(self):
+        self.wd = wd = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, wd)
+        filename = os.path.abspath(__file__)
+        document_root = filename.split('tests')[0]
+        self.app = TestApp(make_thumb_app({},
+                           cache_directory=wd,
+                           document_root=document_root))
+
+    def test_image(self):
+        resp = self.app.get('/small/tests/image.jpg')
+        self.assertEqual(resp.status_int, 200)
+
+    def test_invalid_path(self):
+        self.app.get('/small/', status=404)
+        self.app.get('/small/tests', status=404)
+        self.app.get('/ssmall/tests/image.jpg', status=404)
+
+
+class TestImageAccel(unittest.TestCase):
+
+    def setUp(self):
+        self.wd = wd = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, wd)
+        filename = os.path.abspath(__file__)
+        document_root = filename.split('tests')[0]
+        self.app = TestApp(make_thumb_app({},
+                           cache_directory=wd,
+                           document_root=document_root,
+                           accel_header='x-accel-redirect:/cache'))
+
+    def test_thumb(self):
+        resp = self.app.get('/small/tests/image.jpg')
+        self.assertEqual(resp.status_int, 200)
+        self.assertIn('X-Accel-Redirect',  resp.headers)
+        self.assertEqual(resp.headers['X-Accel-Redirect'],
+                        '/cache/d0b/366/791/image.jpg')
