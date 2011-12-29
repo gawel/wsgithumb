@@ -55,6 +55,7 @@ class TestThumb(unittest.TestCase):
                        sizes=dict(small=(100, 100), original=None),
                        document_root=document_root,
                        cache_directory=wd)
+        config.add_file_view('files', document_root=document_root)
         config.add_route('route_url', '/route_url')
         config.add_view(route_url, route_name='route_url')
         self.app = TestApp(config.make_wsgi_app())
@@ -74,7 +75,13 @@ class TestThumb(unittest.TestCase):
         files = glob(os.path.join(self.wd, '*', '*', '*', '*.jpg'))
         self.assertEqual(len(files), 1, files)
 
+    def test_file(self):
+        resp = self.app.get('/files/tests/tests.py')
+        self.assertEqual(resp.status_int, 200)
+
     def test_not_found(self):
+        self.app.get('/files/none.txt', status=404)
+
         self.app.get('/thumbs/small/tests/imag.jpg', status=404)
 
         self.app.get('/thumbs/small/tests/file.pdf', status=404)

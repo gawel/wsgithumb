@@ -29,6 +29,8 @@ For Apache, set ``accel_header="x-sendfile"``
 
 Here is an example with a thumb::
 
+    >>> from wsgithumb import get_image_response
+    >>> from tests import document_root
     >>> resp = get_image_response(document_root=document_root,
     ...                           cache_directory='/tmp/www/cache',
     ...                           size=(500, 500), path='tests/image.jpg',

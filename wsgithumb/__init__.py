@@ -61,6 +61,31 @@ def get_image_response(document_root=None, cache_directory=None,
                              accel_header=accel_header)
 
 
+def add_file_view(config, route_name, sizes=DEFAULT_SIZES,
+                   document_root=None, cache_directory=None, **view_args):
+    """add a view to serve files in pyramid"""
+    settings = config.registry.settings
+
+    if not document_root:
+        document_root = settings['files.document_root']
+    document_root = os.path.abspath(document_root)
+
+    accel_header = settings.get('files.accel_header', None)
+
+    def view(request):
+        path = request.matchdict['path']
+        path = '/'.join(path)
+        filename = os.path.join(document_root, path)
+        return get_file_response(
+                    filename,
+                    document_root=document_root,
+                    accel_header=accel_header
+        )
+
+    config.add_route(route_name, '/%s/*path' % route_name)
+    config.add_view(view, route_name=route_name, **view_args)
+
+
 def add_thumb_view(config, route_name, sizes=DEFAULT_SIZES,
                    document_root=None, cache_directory=None, **view_args):
     """add a view to serve thumbnails in pyramid"""
@@ -96,6 +121,7 @@ def add_thumb_view(config, route_name, sizes=DEFAULT_SIZES,
 def includeme(config):
     """pyramid include. declare the add_thumb_view"""
     config.add_directive('add_thumb_view', add_thumb_view)
+    config.add_directive('add_file_view', add_file_view)
 
 
 def make_thumb_app(global_conf, document_root=None,

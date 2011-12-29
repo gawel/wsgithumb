@@ -24,6 +24,7 @@ While it's not it's primary function, **wsgithumb** allow to efficiently serve a
 file with the :func:`~wsgithumb.get_file_response` helper::
 
     >>> from wsgithumb import get_file_response
+    >>> from tests import document_root
     >>> from tests import filename
     >>> resp = get_file_response(filename, document_root=document_root,
     ...                          accel_header=None)
@@ -61,3 +62,7 @@ This will return a ``webob.Response`` containing a resized version of
 ``document_root/tests/image.jpg``. If size is None then the file is returned without resizing.
 
 .. autofunction:: wsgithumb.get_image_response
+
+..
+    >>> import shutil
+    >>> shutil.rmtree('/tmp/www')
