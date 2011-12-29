@@ -11,7 +11,7 @@ Installation
 
 Use easy_install or pip::
 
-    $ pip install wsgithumb
+    $ pip install PIL wsgithumb
 
 Generating thumbnails
 ----------------------
@@ -39,7 +39,7 @@ This will return a ``webob.Response`` containing a resized version of
 Serving files
 -------------
 
-While it's not it's primary function, wsgithumb allow to efficiently serve a
+While it's not it's primary function, **wsgithumb** allow to efficiently serve a
 file with the :func:`~wsgithumb.get_file_response` helper::
 
     >>> from wsgithumb import get_file_response
@@ -62,7 +62,7 @@ This allow your application to only return the file path in a response header
 the the web server will use this path to serve the file without blocking your
 application.
 
-wsgithumb allow you to use this feature. Just use the accel_header parameter.
+**wsgithumb** allow you to use this feature. Just use the accel_header parameter.
 
 For NGinx, set ``accel_header="x-accel-redirect"``
 
@@ -93,7 +93,7 @@ So nginx can serve ``/tmp/www/cache/5b6/aaf/3a6/image.jpg``
 WSGI Applications
 =================
 
-wsgithumb provide 2 entry points for PasteDeploy:
+**wsgithumb** provide 2 entry points for PasteDeploy:
 
 .. sourcecode:: ini
 
@@ -109,7 +109,7 @@ available options.
 Using wsgithumb in Pyramid
 --------------------------
 
-There is an helper in wsgithumb to help you to serve thumnails in your application.
+There is an helper in **wsgithumb** to help you to serve thumnails in your application.
 
 Add this to your ``.ini`` file:
 
