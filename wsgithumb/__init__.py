@@ -20,6 +20,7 @@ DEFAULT_SIZES = {
 def get_image_response(document_root=None, cache_directory=None,
                        size=(500, 500), path=None, accel_header=None):
     """helper the get an image response"""
+    #FIXME cache_directory can't be None
 
     dummy, ext = os.path.splitext(path)
 
