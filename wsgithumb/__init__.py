@@ -28,7 +28,7 @@ def get_image_response(document_root=None, cache_directory=None,
     if ext.lower() not in ('.png', '.jpg', '.jpeg', '.gif'):
         return HTTPNotFound()
 
-    filename = os.path.join(document_root, path)
+    filename = os.path.join(document_root, path.encode('utf-8'))
     if not os.path.isfile(filename):
         return HTTPNotFound()
 
@@ -38,7 +38,7 @@ def get_image_response(document_root=None, cache_directory=None,
                                            document_root=document_root)
 
     # generate cached direname
-    h = md5('%s-%s' % (path, size)).hexdigest()
+    h = md5('%s-%s' % (path.encode('utf-8'), size)).hexdigest()
     d1, d2, d3 = h[0:3], h[3:6], h[6:9]
 
     cached = os.path.join(cache_directory, d1, d2, d3)
