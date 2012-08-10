@@ -55,7 +55,7 @@ You want to serve images located in ``document_root``. Use the
     Content-Type: image/jpeg
     Last-Modified: ... GMT
     ETag: "..."
-    Content-Length: 23590
+    Content-Length: ...
     ...
 
 This will return a ``webob.Response`` containing a resized version of

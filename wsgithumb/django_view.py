@@ -17,10 +17,13 @@ if not CACHE_DIRECTORY:
     CACHE_DIRECTORY = os.path.join(tempfile.gettempdir(), 'wsgithumb-cache')
 
 
-def serve(request, size, path, document_root=None, cache_directory=None):
+def serve(request, size, path, factor=100,
+          document_root=None, cache_directory=None):
     """Use an url like::
 
         url(r'^thumbs/(?P<size>[^/]*)/(?P<path>.*)$', django_view.serve)
+        url(r'^thumbs/(?P<size>[^/]*)/(?P<factor>[^/]*)/(?P<path>.*)$',
+            django_view.serve)
     """
     cache_directory = cache_directory or CACHE_DIRECTORY
     if not os.path.isdir(cache_directory):
@@ -38,6 +41,7 @@ def serve(request, size, path, document_root=None, cache_directory=None):
         document_root=document_root,
         cache_directory=cache_directory,
         size=size,
+        factor=factor,
         path=path,
         accel_header=accel_header
     )

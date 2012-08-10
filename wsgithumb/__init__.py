@@ -18,7 +18,8 @@ DEFAULT_SIZES = {
 
 
 def get_image_response(document_root=None, cache_directory=None,
-                       size=(500, 500), path=None, accel_header=None):
+                       size=(500, 500), factor=100,
+                       path=None, accel_header=None):
     """helper the get an image response"""
     #FIXME cache_directory can't be None
 
@@ -37,8 +38,10 @@ def get_image_response(document_root=None, cache_directory=None,
         return get_file_response(filename, accel_header=accel_header,
                                            document_root=document_root)
 
+    factor = int(factor)
+
     # generate cached direname
-    h = md5('%s-%s' % (path, size)).hexdigest()
+    h = md5('%s-%s-%s' % (path, size, factor)).hexdigest()
     d1, d2, d3 = h[0:3], h[3:6], h[6:9]
 
     cached = os.path.join(cache_directory, d1, d2, d3)
@@ -55,7 +58,7 @@ def get_image_response(document_root=None, cache_directory=None,
 
     # generate cached thumb if not yet done
     if not os.path.isfile(cached):
-        resize(filename, cached, size)
+        resize(filename, cached, size, factor=factor)
 
     return get_file_response(cached,
                              document_root=cache_directory,
@@ -87,7 +90,7 @@ def add_file_view(config, route_name, sizes=DEFAULT_SIZES,
     config.add_view(view, route_name=route_name, **view_args)
 
 
-def add_thumb_view(config, route_name, sizes=DEFAULT_SIZES,
+def add_thumb_view(config, route_name, sizes=DEFAULT_SIZES, factors=(),
                    document_root=None, cache_directory=None, **view_args):
     """add a view to serve thumbnails in pyramid"""
     settings = config.registry.settings
@@ -107,15 +110,21 @@ def add_thumb_view(config, route_name, sizes=DEFAULT_SIZES,
 
     def view(request):
         size = sizes[request.matchdict['size']]
+        factor = int(request.matchdict.get('factor', 100))
+        if factors and factor not in factors:
+            return HTTPNotFound()
         path = request.matchdict['path']
         path = '/'.join(path)
         return get_image_response(
             document_root=document_root,
             cache_directory=cache_directory,
-            size=size, path=path, accel_header=accel_header
+            size=size, factor=factor, path=path, accel_header=accel_header
         )
 
-    config.add_route(route_name, '/%s/{size}/*path' % route_name)
+    if factors:
+        config.add_route(route_name, '/%s/{size}/{factor}/*path' % route_name)
+    else:
+        config.add_route(route_name, '/%s/{size}/*path' % route_name)
     config.add_view(view, route_name=route_name, **view_args)
 
 
@@ -129,6 +138,7 @@ def make_thumb_app(global_conf, document_root=None,
                    cache_directory=None,
                    accel_header=None,
                    sizes=DEFAULT_SIZES,
+                   factors=(),
                    **settings):
     """thumb application factory"""
     document_root = os.path.abspath(document_root)

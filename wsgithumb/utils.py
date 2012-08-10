@@ -14,16 +14,54 @@ except ImportError:
     from webob.exc import HTTPNotFound  # NOQA
 
 try:
-    import PIL.Image as Image
+    from pystacia.image import read
+    HAS_PYSTACIA = True
 except ImportError:
-    import Image  # NOQA
+    HAS_PYSTACIA = False
+
+if not HAS_PYSTACIA:
+    try:
+        import PIL.Image as Image
+    except ImportError:
+        import Image  # NOQA
 
 
-def resize(src, dst, size, mode='r'):
-    """resize an image to size"""
-    image = Image.open(src, mode)
+def resize_pil(src, dst, size, factor=100):
+    """resize with pil"""
+    image = Image.open(src, 'r')
     image.thumbnail(size, Image.ANTIALIAS)
     image.save(dst)
+
+
+def resize_im(src, dst, size, factor=100):
+    """resize with pystacia"""
+    image = read(src)
+    width, height = size
+    scale = max(float(width) / image.width, float(height) / image.height)
+    if scale > 1:
+        image.rescale(factor=(scale + .001))
+    elif scale < 0.9:
+        image.rescale(factor=scale)
+    scale = max(float(width) / image.width, float(height) / image.height)
+    x = (image.width * scale - width) / 2
+    y = (image.height * scale - height) / 2
+    print image, scale, width, height, x, y
+    image.resize(
+            int(width), int(height),
+            int(x), int(y),
+          )
+    if factor != 100:
+        image.rescale(factor=factor / 100.)
+    image.write(dst)
+    print image, scale, width, height, x, y
+
+
+def resize(src, dst, size, **kwargs):
+    """resize an image to size"""
+    if HAS_PYSTACIA:
+        return resize_im(src, dst, size, **kwargs)
+    else:
+        return resize_pil(src, dst, size, **kwargs)
     return dst
 
 

@@ -92,6 +92,46 @@ class TestThumb(unittest.TestCase):
                          'http://localhost/thumbs/small/tests/image.png')
 
 
+class TestThumbWithFactor(unittest.TestCase):
+
+    def setUp(self):
+        self.wd = wd = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, wd)
+
+        filename = os.path.abspath(__file__)
+        document_root = filename.split('tests')[0]
+        config = testing.setUp()
+        config.include("wsgithumb")
+        config.add_thumb_view('thumbs',
+                       sizes=dict(small=(100, 100), original=None),
+                       factors=(100, 75),
+                       document_root=document_root,
+                       cache_directory=wd)
+        config.add_file_view('files', document_root=document_root)
+        config.add_route('route_url', '/route_url')
+        config.add_view(route_url, route_name='route_url')
+        self.app = TestApp(config.make_wsgi_app())
+
+    def test_thumb(self):
+        original = self.app.get('/thumbs/original/100/tests/image.jpg')
+        self.assertEqual(original.status_int, 200)
+
+        thumb = self.app.get('/thumbs/small/75/tests/image.jpg')
+        self.assertEqual(thumb.status_int, 200)
+
+        self.assertTrue(original.content_length > thumb.content_length)
+
+        thumb2 = self.app.get('/thumbs/small/75/tests/image.jpg')
+        self.assertEqual(thumb.last_modified, thumb2.last_modified)
+
+        files = glob(os.path.join(self.wd, '*', '*', '*', '*.jpg'))
+        self.assertEqual(len(files), 1, files)
+
+    def test_404(self):
+        thumb = self.app.get('/thumbs/small/70/tests/image.jpg', status='*')
+        self.assertEqual(thumb.status_int, 404)
+
+
 class TestFile(unittest.TestCase):
 
     def setUp(self):
