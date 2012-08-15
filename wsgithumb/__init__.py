@@ -49,7 +49,11 @@ def get_image_response(document_root=None, cache_directory=None,
 
     cached = os.path.join(cache_directory, d1, d2, d3)
     if not os.path.isdir(cached):
-        os.makedirs(cached)
+        try:
+            os.makedirs(cached)
+        except OSError:
+            # dir exist...?!
+            pass
 
     cached = os.path.join(cached, os.path.basename(filename))
 
