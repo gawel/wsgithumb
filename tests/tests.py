@@ -184,8 +184,10 @@ class TestImageAccel(unittest.TestCase):
         resp = self.app.get('/small/tests/image.jpg')
         self.assertEqual(resp.status_int, 200)
         self.assertIn('X-Accel-Redirect',  resp.headers)
-        self.assertEqual(resp.headers['X-Accel-Redirect'],
-                        '/%s/d0b/366/791/image.jpg' % self.dirname)
+        self.assertTrue(resp.headers['X-Accel-Redirect'].startswith(
+                        '/' + self.dirname))
+        self.assertTrue(resp.headers['X-Accel-Redirect'].endswith(
+                        '/image.jpg'), resp)
 
     def test_original(self):
         resp = self.app.get('/original/tests/image.jpg')
