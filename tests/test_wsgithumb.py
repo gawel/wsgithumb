@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from wsgithumb import get_file_response
 from wsgithumb import make_file_app
 from wsgithumb import make_thumb_app
 from pyramid import testing
 from webtest import TestApp
-import unittest2 as unittest
 from glob import glob
+import unittest
 import tempfile
 import shutil
 import os
@@ -21,7 +22,7 @@ class TestAccel(unittest.TestCase):
                                  document_root=document_root)
         self.assertIn('X-Accel-Redirect',  resp.headers)
         self.assertEqual(resp.headers['X-Accel-Redirect'],
-                        '/tests/tests.py')
+                         '/tests/test_wsgithumb.py')
 
     def test_apache(self):
         filename = os.path.abspath(__file__)
@@ -35,9 +36,12 @@ class TestAccel(unittest.TestCase):
 
 def route_url(request):
     url = request.route_url('thumbs', size='small',
-                             path=request.GET.getall('path'))
+                            path=request.GET.getall('path'))
     resp = request.response
-    resp.body = url
+    try:
+        resp.body = url
+    except TypeError:
+        resp.body = url.encode('utf8')
     return resp
 
 
@@ -52,9 +56,9 @@ class TestThumb(unittest.TestCase):
         config = testing.setUp()
         config.include("wsgithumb")
         config.add_thumb_view('thumbs',
-                       sizes=dict(small=(100, 100), original=None),
-                       document_root=document_root,
-                       cache_directory=wd)
+                              sizes=dict(small=(100, 100), original=None),
+                              document_root=document_root,
+                              cache_directory=wd)
         config.add_file_view('files', document_root=document_root)
         config.add_route('route_url', '/route_url')
         config.add_view(route_url, route_name='route_url')
@@ -76,7 +80,7 @@ class TestThumb(unittest.TestCase):
         self.assertEqual(len(files), 1, files)
 
     def test_file(self):
-        resp = self.app.get('/files/tests/tests.py')
+        resp = self.app.get('/files/tests/test_wsgithumb.py')
         self.assertEqual(resp.status_int, 200)
 
     def test_not_found(self):
@@ -89,7 +93,7 @@ class TestThumb(unittest.TestCase):
     def test_route_url(self):
         resp = self.app.get('/route_url?path=tests&path=image.png')
         self.assertEqual(resp.body,
-                         'http://localhost/thumbs/small/tests/image.png')
+                         b'http://localhost/thumbs/small/tests/image.png')
 
 
 class TestThumbWithFactor(unittest.TestCase):
@@ -103,10 +107,10 @@ class TestThumbWithFactor(unittest.TestCase):
         config = testing.setUp()
         config.include("wsgithumb")
         config.add_thumb_view('thumbs',
-                       sizes=dict(small=(100, 100), original=None),
-                       factors=(100, 75),
-                       document_root=document_root,
-                       cache_directory=wd)
+                              sizes=dict(small=(100, 100), original=None),
+                              factors=(100, 75),
+                              document_root=document_root,
+                              cache_directory=wd)
         config.add_file_view('files', document_root=document_root)
         config.add_route('route_url', '/route_url')
         config.add_view(route_url, route_name='route_url')
@@ -142,7 +146,7 @@ class TestFile(unittest.TestCase):
     def test_file(self):
         self.app.get('/tests/tests.pic', status=404)
 
-        resp = self.app.get('/tests/tests.py')
+        resp = self.app.get('/tests/test_wsgithumb.py')
         self.assertEqual(resp.status_int, 200)
 
 
@@ -194,4 +198,4 @@ class TestImageAccel(unittest.TestCase):
         self.assertEqual(resp.status_int, 200)
         self.assertIn('X-Accel-Redirect',  resp.headers)
         self.assertEqual(resp.headers['X-Accel-Redirect'],
-                        '/wsgithumb/tests/image.jpg')
+                         '/wsgithumb/tests/image.jpg')

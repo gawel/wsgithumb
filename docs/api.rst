@@ -28,7 +28,7 @@ file with the :func:`~wsgithumb.get_file_response` helper::
     >>> from tests import filename
     >>> resp = get_file_response(filename, document_root=document_root,
     ...                          accel_header=None)
-    >>> print resp
+    >>> print(resp)
     200 OK
     Content-Type: text/x-python; charset=UTF-8
     Last-Modified: ... GMT
@@ -50,7 +50,7 @@ You want to serve images located in ``document_root``. Use the
     ...                           cache_directory='/tmp/www/cache',
     ...                           size=(500, 500), path='tests/image.jpg',
     ...                           accel_header=None)
-    >>> print resp
+    >>> print(resp)
     200 OK
     Content-Type: image/jpeg
     Last-Modified: ... GMT

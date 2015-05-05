@@ -1,0 +1,29 @@
+[run]
+include =
+    */wsgithumb/*.py
+    */wsgithumb/*/*.py
+omit =
+    */tests*
+    */docs/conf.py
+    */examples/social*
+    */examples/mycrons*
+    */examples/mycommands*
+    */examples/myextends*
+    */examples/nickserv*
+    */examples/freenode*
+    */wsgithumb/template/plugin*
+    */wsgithumb/_gen_doc*
+    */wsgithumb/_parse_rfc*
+    */site-packages*
+    */lib/python*
+    */lib-python*
+    */lib_pypy*
+    */src*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    def parse_args

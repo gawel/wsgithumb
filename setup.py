@@ -32,6 +32,15 @@ setup(name='wsgithumb',
           'WebOb',
           'Pillow',
       ],
+      extras_require={
+          'test': [
+              'pyramid',
+              'Django',
+              'coverage',
+              'webtest',
+              'pystacia',
+          ]
+      },
       entry_points="""
       # -*- Entry points: -*-
       [paste.app_factory]

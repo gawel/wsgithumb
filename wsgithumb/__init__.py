@@ -6,6 +6,14 @@ from wsgithumb.utils import get_file_response
 from wsgithumb.utils import HTTPNotFound
 from wsgithumb.utils import resize
 
+try:
+    unicode
+    PY3 = False
+except NameError:
+    unicode = str
+    PY3 = True
+
+
 DEFAULT_SIZES = {
     'icon': (16, 16),
     'small': (50, 50),
@@ -21,7 +29,7 @@ def get_image_response(document_root=None, cache_directory=None,
                        size=(500, 500), factor=100,
                        path=None, accel_header=None):
     """helper the get an image response"""
-    #FIXME cache_directory can't be None
+    # FIXME cache_directory can't be None
 
     dummy, ext = os.path.splitext(path)
 
@@ -29,22 +37,26 @@ def get_image_response(document_root=None, cache_directory=None,
     if ext.lower() not in ('.png', '.jpg', '.jpeg', '.gif'):
         return HTTPNotFound()
 
-    filename = os.path.join(document_root, path.encode('utf-8'))
+    if PY3:
+        filename = os.path.join(document_root, path)
+    else:
+        filename = os.path.join(document_root, path.encode('utf-8'))
     if not os.path.isfile(filename):
         return HTTPNotFound()
 
     if size is None:
         # get original
-        return get_file_response(filename, accel_header=accel_header,
-                                           document_root=document_root)
+        return get_file_response(filename,
+                                 accel_header=accel_header,
+                                 document_root=document_root)
 
     factor = int(factor)
 
     # generate cached direname
-    if isinstance(path, unicode):
-        h = md5('%s-%s-%s' % (path.encode('utf-8'), size, factor)).hexdigest()
-    else:
-        h = md5('%s-%s-%s' % (path, size, factor)).hexdigest()
+    h = u'%s-%s-%s' % (path, size, factor)
+    if PY3 or isinstance(h, unicode):
+        h = h.encode('utf8')
+    h = md5(h).hexdigest()
     d1, d2, d3 = h[0:3], h[3:6], h[6:9]
 
     cached = os.path.join(cache_directory, d1, d2, d3)
@@ -73,7 +85,7 @@ def get_image_response(document_root=None, cache_directory=None,
 
 
 def add_file_view(config, route_name, sizes=DEFAULT_SIZES,
-                   document_root=None, cache_directory=None, **view_args):
+                  document_root=None, cache_directory=None, **view_args):
     """add a view to serve files in pyramid"""
     settings = config.registry.settings
 
@@ -88,9 +100,9 @@ def add_file_view(config, route_name, sizes=DEFAULT_SIZES,
         path = '/'.join(path)
         filename = os.path.join(document_root, path)
         return get_file_response(
-                    filename,
-                    document_root=document_root,
-                    accel_header=accel_header
+            filename,
+            document_root=document_root,
+            accel_header=accel_header
         )
 
     config.add_route(route_name, '/%s/*path' % route_name)
@@ -174,8 +186,8 @@ def make_thumb_app(global_conf, document_root=None,
 
 
 def make_file_app(global_conf, document_root=None,
-                   accel_header=None,
-                   **settings):
+                  accel_header=None,
+                  **settings):
     """file application factory"""
     document_root = os.path.abspath(document_root)
 

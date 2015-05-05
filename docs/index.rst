@@ -11,7 +11,7 @@ Installation
 
 Use easy_install or pip::
 
-    $ pip install PIL wsgithumb
+    $ pip install Pillow wsgithumb
 
 About X-Sendfile
 -----------------
@@ -35,12 +35,12 @@ Here is an example with a thumb::
     ...                           cache_directory='/tmp/www/cache',
     ...                           size=(500, 500), path='tests/image.jpg',
     ...                           accel_header='x-accel-redirect')
-    >>> print resp
+    >>> print(resp)
     200 OK
     Content-Type: image/jpeg
     Last-Modified: ... GMT
     ETag: "..."
-    X-Accel-Redirect: /cache/5b6/aaf/3a6/image.jpg
+    X-Accel-Redirect: /cache/.../image.jpg
 
 So you just need to add this to your nginx configuration::
 
@@ -49,7 +49,7 @@ So you just need to add this to your nginx configuration::
       root   /tmp/www;
     }
 
-So nginx can serve ``/tmp/www/cache/5b6/aaf/3a6/image.jpg``
+So nginx can serve ``/tmp/www/cache/.../image.jpg``
 
 WSGI Applications
 ------------------
@@ -140,9 +140,9 @@ If you do not provide some sizes then those are used::
 
 You can now retrieve your images with::
 
-    >>> print request.route_url('thumbs', size='small',
+    >>> print(request.route_url('thumbs', size='small',
     ...                         path='tests/image.png']
-    ...                        ) #doctest: +SKIP
+    ...                        )) #doctest: +SKIP
     'http://localhost/thumbs/small/tests/image.png'
 
 

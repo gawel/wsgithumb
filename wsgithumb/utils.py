@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # this came from http://docs.webob.org/en/latest/file-example.html
+from __future__ import unicode_literals
 import mimetypes
 import os
 
@@ -45,15 +46,13 @@ def resize_im(src, dst, size, factor=100):
     scale = max(float(width) / image.width, float(height) / image.height)
     x = (image.width * scale - width) / 2
     y = (image.height * scale - height) / 2
-    print image, scale, width, height, x, y
     image.resize(
-            int(width), int(height),
-            int(x), int(y),
-          )
+        int(width), int(height),
+        int(x), int(y),
+    )
     if factor != 100:
         image.rescale(factor=factor / 100.)
     image.write(dst)
-    print image, scale, width, height, x, y
 
 
 def resize(src, dst, size, **kwargs):
@@ -144,8 +143,8 @@ def get_file_response(filename, document_root=None, accel_header=None):
             resp.headers[accel_header.title()] = filename
         else:
             raise RuntimeError(
-                    "Can't find a way to use your %s header" % accel_header)
-        resp.app_iter = ['']
+                "Can't find a way to use your %s header" % accel_header)
+        resp.app_iter = [b'']
     else:
         resp.app_iter = FileIterable(filename)
     return resp
